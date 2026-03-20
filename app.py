@@ -265,9 +265,13 @@ def _call_groq_tutor(
         f"{trusted_context.strip() or '[no trusted context available]'}\n\n"
         "Output requirements:\n"
         "- If the request is non-academic: answer directly (no hints and no Socratic questions).\n"
-        "- If the request is academic: teach with steps/hints, and avoid the final overall result for full problems.\n"
+        "- If the request is academic: teach with steps/hints, and give the final answer while making sure they understand it. You can't just generate a essay or a report or just solve a math problem.\n"
+        "- You make sure the user understands the problem, and then give the answer\n"
         "- Only ask questions if required to clarify missing info or which sub-step/part you should address.\n"
         "- If the user specifically asks for a sub-step/part, answer that sub-part directly (briefly)."
+        "- Make sure all information is updated to 2026"
+        "- If the user is asking you a follow up question without explicity saying which problem (like if they give you a math problem and then an ela essay and ask, Can you check it now?), use the most recent assignment (in this context it would be the essay becomes the essay comes after the math problem)"
+        
     )
 
     content_parts = [{"type": "text", "text": user_text}]
