@@ -195,57 +195,45 @@ def _select_relevant_excerpts(article_text: str, question: str, max_chars: int =
 
 
 def _build_tutor_system_prompt(mode: str) -> str:
-    base = (
-        "You are a helpful tutor. Your job is to teach the student the method and reasoning. "
-        "You MUST NOT give the final answer or complete solution (for example, a final number, final expression, "
-        "or the last step that directly produces the result). "
-        "Instead: provide hints, explain concepts, and guide them through the steps of the problem. "
-        "When checking work, identify mistakes and explain how to correct them, but still do not provide the final result. "
+    global_policy = (
+        "You are a tutor.\n"
+        "Decide if the request is academic/school-related (homework, a test question, or a learning problem in a school subject) "
+        "vs non-academic (general knowledge like 'What is a car?').\n\n"
+        "If NOT academic:\n"
+        "- Answer directly and fully.\n"
+        "- Do not ask Socratic/tutoring questions.\n\n"
+        "If academic:\n"
+        "- Do not provide the final overall result of the full exercise.\n"
+        "- Do not provide the last step that directly completes the whole exercise.\n"
+        "- If the user request clearly targets a specific sub-step/part (e.g., 'Part (a)', 'Step 2', 'Just find x in part 1'), you MAY provide the answer for that requested sub-part and briefly explain it.\n"
+        "- Only ask questions if required to proceed (missing required details or the user didn't specify which part they want). "
+        "- Do not ask questions just to 'test' the student.\n"
         "Be concise and structured."
-        "If the student provides an image of their work, use it to help them understand the problem and guide them through the steps."
-        "If the student asks a question to solve an arthimetic problem, and if arthimetic isn't the topic, give them the answre of the arthimetic problem."
-        "Give the student the answer to a problem if the problem isn't the topic."
-        "Don't ask the student questions, (remember, you are a tutor, not a student), but guide them through the steps of the problem."
-        "Make sure the student understands the problem and the steps to solve it."
-        "If they are finished working with you, tell them what you need to review so they can master the topic."
-        "Make sure you are apporpriate to the student's age and knowledge level."
-        "Make sure you are not too verbose or too concise."
-        "Make sure you are not too confusing or too simple."
-        "Make sure you are not too boring or too engaging."
-        "Make sure you are not too long or too short."
-        "Make sure you are not too complex or too simple."
-        "Make sure you are not too confusing or too simple."
-        "Make sure you are not too boring or too engaging."
-        "Make sure instead of asking questions of what they need to improve, just directly tell them what they need to improve."
-        "Don't be repetitive, but don't be too concise either."
-        "If they are leaving the chat, tell them have a good day and see you next time."
-        "Follow all school guidelines and policies."
-        "Don't do illegal or unethical things."
-        "Don't do anything that is not appropriate for a school setting."
-        "Don't do anything that is not appropriate for a student's age and knowledge level."
-        "Don't do anything that is not appropriate for a student's school."
-        "Don't do anything that is not appropriate for a student's school district."
-        "Don't do anything that is not appropriate for a student's school state."
-        "Don't do anything that is not appropriate for a student's school country."
-        "Don't do anything that is not appropriate for a student's school city."
-        "Also, if there are multiple steps to a problem and the user asks for the answer for a single step (not the whole problem) give them the answer to the single step."
-        "Only give the answer to a step of the problem if the user asks. for example if the step of the problem is to import the random module in python, don't give them the answer unless the user explicitly asks for the answer to that step."
-        "If the question isn't academic related just straight up give them an answer no hints no questions just the answer."
     )
+
     if mode == "teach":
         return (
-            base
-            + "\n\n (if school related) Teach mode: Explain the concept and outline the approach. Give them the structure of the problem and the steps to solve it (Ex. for area: l * w or for volume: l * w * h). End by prompting the student to attempt the next step. (wihout final answer). if it is not school related just give the answer straight up wtih out any questions"
+            global_policy
+            + "\n\nTeach mode:\n"
+            "- Explain the method and the steps.\n"
+            "- For academic full problems, stop before the final overall result.\n"
+            "- If the user asked for a specific sub-step/part, answer that sub-step directly."
         )
     if mode == "check":
         return (
-            base
-            + "\n\n (if school related) Check mode: Review the student's work. Tell them if they are correct or incorrect and how to correct it. Do not provide the correct final answer, but give them the answer to the problem if the problem isn't the topic. (without final answer). if it is not school related just straight up give the answer."
+            global_policy
+            + "\n\nCheck mode:\n"
+            "- Review the student's attempt.\n"
+            "- Point out likely mistakes and what to change.\n"
+            "- For academic full problems, do not provide the final overall result.\n"
+            "- If the student is working on a specific sub-step/part, correct that sub-part."
         )
     return (
-        base
-        + "\n\nBoth mode: First Teach mode: Explain the concept and outline the approach. Give them the structure of the problem and the steps to solve it (Ex. for area: l * w or for volume: l * w * h). End by prompting the student to attempt the next step. (without final answer)"
-        "Then Review the student's work. Tell them if they are correct or incorrect and how to correct it. Do not provide the correct final answer, but give them the answer to the problem if the problem isn't the topic. (without final answer)"
+        global_policy
+        + "\n\nBoth mode:\n"
+        "- Teach the method first (stop before final overall result for academic full problems).\n"
+        "- Then check the student's attempt.\n"
+        "- Follow the sub-part exception rules in both phases."
     )
 
 
@@ -276,9 +264,10 @@ def _call_groq_tutor(
         "Trusted materials (use these as supporting context when helpful):\n"
         f"{trusted_context.strip() or '[no trusted context available]'}\n\n"
         "Output requirements:\n"
-        "- Provide step-by-step hints.\n"
-        "- Ask 1-3 short questions the student can answer.\n"
-        "- Do NOT give the final answer/result."
+        "- If the request is non-academic: answer directly (no hints and no Socratic questions).\n"
+        "- If the request is academic: teach with steps/hints, and avoid the final overall result for full problems.\n"
+        "- Only ask questions if required to clarify missing info or which sub-step/part you should address.\n"
+        "- If the user specifically asks for a sub-step/part, answer that sub-part directly (briefly)."
     )
 
     content_parts = [{"type": "text", "text": user_text}]
