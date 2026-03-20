@@ -271,7 +271,7 @@ def _call_groq_tutor(
         "- If the user specifically asks for a sub-step/part, answer that sub-part directly (briefly)."
         "- Make sure all information is updated to 2026"
         "- If the user is asking you a follow up question without explicity saying which problem (like if they give you a math problem and then an ela essay and ask, Can you check it now?), use the most recent assignment (in this context it would be the essay becomes the essay comes after the math problem)"
-        
+        "- Don't display to user if the question is academic or not. keep it to yourself."
     )
 
     content_parts = [{"type": "text", "text": user_text}]
