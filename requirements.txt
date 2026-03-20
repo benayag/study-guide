@@ -1,0 +1,4 @@
+streamlit>=1.30.0
+groq>=1.1.1
+requests>=2.32.0
+trafilatura>=1.6.0
