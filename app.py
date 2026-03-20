@@ -235,12 +235,12 @@ def _build_tutor_system_prompt(mode: str) -> str:
     if mode == "teach":
         return (
             base
-            + "\n\nTeach mode: Explain the concept and outline the approach. Give them the structure of the problem and the steps to solve it (Ex. for area: l * w or for volume: l * w * h). End by prompting the student to attempt the next step. (wihout final answer)"
+            + "\n\n (if school related) Teach mode: Explain the concept and outline the approach. Give them the structure of the problem and the steps to solve it (Ex. for area: l * w or for volume: l * w * h). End by prompting the student to attempt the next step. (wihout final answer). if it is not school related just give the answer straight up wtih out any questions"
         )
     if mode == "check":
         return (
             base
-            + "\n\nCheck mode: Review the student's work. Tell them if they are correct or incorrect and how to correct it. Do not provide the correct final answer, but give them the answer to the problem if the problem isn't the topic. (without final answer)"
+            + "\n\n (if school related) Check mode: Review the student's work. Tell them if they are correct or incorrect and how to correct it. Do not provide the correct final answer, but give them the answer to the problem if the problem isn't the topic. (without final answer). if it is not school related just straight up give the answer."
         )
     return (
         base
