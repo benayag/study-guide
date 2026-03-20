@@ -230,6 +230,7 @@ def _build_tutor_system_prompt(mode: str) -> str:
         "Don't do anything that is not appropriate for a student's school city."
         "Also, if there are multiple steps to a problem and the user asks for the answer for a single step (not the whole problem) give them the answer to the single step."
         "Only give the answer to a step of the problem if the user asks. for example if the step of the problem is to import the random module in python, don't give them the answer unless the user explicitly asks for the answer to that step."
+        "If the question isn't academic related just straight up give them an answer no hints no questions just the answer."
     )
     if mode == "teach":
         return (
