@@ -9,23 +9,23 @@ from typing import List, Optional, Tuple
 import requests
 import streamlit as st
 import trafilatura
-import google.generativeai as genai  # Gemini SDK
+import openai  # OpenRouter / OpenAI-compatible
 
 APP_TITLE = "Study Guide Tutor"
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 TRUSTED_URLS_FILE = os.path.join(APP_DIR, ".streamlit", "trusted_urls.json")
 
 
-def _safe_get_gemini_api_key() -> Optional[str]:
+def _safe_get_api_key() -> Optional[str]:
     try:
-        if "GEMINI_API_KEY" in st.secrets:
-            key = str(st.secrets["GEMINI_API_KEY"]).strip()
+        if "OPENROUTER_API_KEY" in st.secrets:
+            key = str(st.secrets["OPENROUTER_API_KEY"]).strip()
             if key and "PASTE_YOUR_KEY_HERE" not in key:
                 return key
     except Exception:
         pass
 
-    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    key = (os.getenv("OPENROUTER_API_KEY") or "").strip()
     if key and "PASTE_YOUR_KEY_HERE" not in key:
         return key
 
@@ -141,7 +141,6 @@ def _select_relevant_excerpts(article_text: str, question: str, max_chars: int =
 
 
 def _build_tutor_system_prompt(mode: str) -> str:
-    # Just returns instructions; does NOT reference question
     return "You are a tutor. Decide if the request is academic or general, and follow tutor rules."
 
 
@@ -152,7 +151,7 @@ def _image_to_data_url(upload) -> str:
     return f"data:{mime};base64,{b64}"
 
 
-def _call_gemini_tutor(
+def _call_openrouter_tutor(
     *,
     model,
     mode: str,
@@ -164,7 +163,6 @@ def _call_gemini_tutor(
 ) -> str:
     system_prompt = _build_tutor_system_prompt(mode)
 
-    # ORIGINAL user_text prompt kept exactly as you provided
     user_text = (
         f"Student question/work:\n{question.strip()}\n\n"
         f"Student attempt (typed):\n{student_attempt_text.strip() or '[none]'}\n\n"
@@ -183,29 +181,20 @@ def _call_gemini_tutor(
         "- Don't display to user if the question is academic or not. keep it to yourself."
     )
 
-    # Prepare chat history (keep only last 6 messages to reduce payload)
-    chat = None
-    if question.strip():
-        chat = model.start_chat(history=[
-            {"role": m["role"], "parts": [m["content"]]}
-            for m in history_messages[-3:]
-            if m.get("role") in {"user", "assistant"}
-        ])
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in history_messages[-6:]:
+        if msg.get("role") in {"user", "assistant"}:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": user_text})
 
-    # Send message with optional image
-    if image_upload is not None:
-        response = chat.send_message([
-            system_prompt,
-            user_text,
-            {
-                "mime_type": image_upload.type,
-                "data": image_upload.getvalue()
-            }
-        ])
-    else:
-        response = chat.send_message(f"{system_prompt}\n\n{user_text}")
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages,
+        temperature=0.2,
+        max_tokens=1500,
+    )
 
-    return response.text.strip()
+    return response.choices[0].message.content.strip()
 
 
 @dataclass
@@ -218,13 +207,13 @@ def main() -> None:
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     st.title(APP_TITLE)
 
-    api_key = _safe_get_gemini_api_key()
+    api_key = _safe_get_api_key()
     if not api_key:
-        st.error("Missing `GEMINI_API_KEY`. Add it to Streamlit secrets or your environment variables.")
+        st.error("Missing `OPENROUTER_API_KEY`. Add it to Streamlit secrets or your environment variables.")
         st.stop()
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    openai.api_key = api_key
+    model_name = "openrouter-gpt-4"
 
     if "trusted_urls" not in st.session_state:
         st.session_state.trusted_urls = _load_trusted_urls()
@@ -232,7 +221,7 @@ def main() -> None:
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # ------------------- SIDEBAR UI (unchanged) -------------------
+    # ------------------- SIDEBAR UI -------------------
     with st.sidebar:
         st.subheader("Trusted Articles (URLs)")
         st.caption("These are used as study context. The AI will still teach without giving final answers.")
@@ -266,7 +255,7 @@ def main() -> None:
 
     left_col, right_col = st.columns([2, 1], gap="large")
 
-    # ------------------- MAIN CHAT + IMAGE UI (unchanged) -------------------
+    # ------------------- MAIN CHAT + IMAGE UI -------------------
     with left_col:
         st.subheader("Chat")
         for msg in st.session_state.messages:
@@ -319,8 +308,8 @@ def main() -> None:
 
                     image_upload = st.session_state.get("uploaded_image")
 
-                    answer = _call_gemini_tutor(
-                        model=model,
+                    answer = _call_openrouter_tutor(
+                        model=model_name,
                         mode=config.mode,
                         history_messages=st.session_state.messages[:-1],
                         question=question,
