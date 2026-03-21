@@ -190,19 +190,19 @@ chat = model.start_chat(history=[
 ])
 
     # Add image if uploaded
-    if image_upload is not None:
-        response = chat.send_message([
-            system_prompt,
-            user_text,
-            {
-                "mime_type": image_upload.type,
-                "data": image_upload.getvalue()
-            }
-        ])
-    else:
-        response = chat.send_message(f"{system_prompt}\n\n{user_text}")
+if image_upload is not None:
+    response = chat.send_message([
+        system_prompt,
+        user_text,
+        {
+            "mime_type": image_upload.type,
+            "data": image_upload.getvalue()
+        }
+    ])
+else:
+    response = chat.send_message(f"{system_prompt}\n\n{user_text}")
 
-    return response.text.strip()
+return response.text.strip()
 
 
 @dataclass
