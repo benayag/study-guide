@@ -183,24 +183,25 @@ def _call_gemini_tutor(
         "- Don't display to user if the question is academic or not. keep it to yourself."
     )
 
-    # Prepare chat history
-chat = model.start_chat(history=[
-    {"role": m["role"], "parts": [m["content"]]}
-    for m in history_messages[-6:]  # keep only last 6 messages
-])
-
-    # Add image if uploaded
-if image_upload is not None:
-    response = chat.send_message([
-        system_prompt,
-        user_text,
-        {
-            "mime_type": image_upload.type,
-            "data": image_upload.getvalue()
-        }
+    # Prepare chat history (keep only last 6 messages to reduce payload)
+    chat = model.start_chat(history=[
+        {"role": m["role"], "parts": [m["content"]]}
+        for m in history_messages[-6:]
+        if m.get("role") in {"user", "assistant"}
     ])
-else:
-    response = chat.send_message(f"{system_prompt}\n\n{user_text}")
+
+    # Send message with optional image
+    if image_upload is not None:
+        response = chat.send_message([
+            system_prompt,
+            user_text,
+            {
+                "mime_type": image_upload.type,
+                "data": image_upload.getvalue()
+            }
+        ])
+    else:
+        response = chat.send_message(f"{system_prompt}\n\n{user_text}")
 
     return response.text.strip()
 
