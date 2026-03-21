@@ -187,14 +187,14 @@ def _call_openrouter_tutor(
             messages.append({"role": msg["role"], "content": msg["content"]})
     messages.append({"role": "user", "content": user_text})
 
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model=model,
         messages=messages,
         temperature=0.2,
         max_tokens=1500,
     )
 
-    return response.choices[0].message.content.strip()
+    return response.choices[0].message["content"].strip()
 
 
 @dataclass
