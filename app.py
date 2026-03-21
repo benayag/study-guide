@@ -186,7 +186,7 @@ def _call_gemini_tutor(
     # Prepare chat history (keep only last 6 messages to reduce payload)
     chat = model.start_chat(history=[
         {"role": m["role"], "parts": [m["content"]]}
-        for m in history_messages[-6:]
+        for m in history_messages[-3:]
         if m.get("role") in {"user", "assistant"}
     ])
 
