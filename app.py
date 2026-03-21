@@ -184,11 +184,10 @@ def _call_gemini_tutor(
     )
 
     # Prepare chat history
-    chat = model.start_chat(history=[
-        {"role": m["role"], "parts": [m["content"]]}
-        for m in history_messages[-16:]
-        if m.get("role") in {"user", "assistant"}
-    ])
+chat = model.start_chat(history=[
+    {"role": m["role"], "parts": [m["content"]]}
+    for m in history_messages[-6:]  # keep only last 6 messages
+])
 
     # Add image if uploaded
     if image_upload is not None:
