@@ -264,6 +264,8 @@ def _call_groq_tutor(
         "Trusted materials (use these as supporting context when helpful):\n"
         f"{trusted_context.strip() or '[no trusted context available]'}\n\n"
         "Output requirements:\n"
+        "- 1. Read the request to find what the problem is. If it is not a problem but an follow up question, the problem is the the problem before."
+        "- 2. If there is a problem, make sure you understand the topic and problem."
         "- If the request is non-academic: answer directly (no hints and no Socratic questions).\n"
         "- If the request is academic: teach with steps/hints, and give the final answer while making sure they understand it. You can't just generate a essay or a report or just solve a math problem.\n"
         "- You make sure the user understands the problem, and then give the answer\n"
