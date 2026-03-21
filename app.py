@@ -184,11 +184,13 @@ def _call_gemini_tutor(
     )
 
     # Prepare chat history (keep only last 6 messages to reduce payload)
-    chat = model.start_chat(history=[
-        {"role": m["role"], "parts": [m["content"]]}
-        for m in history_messages[-3:]
-        if m.get("role") in {"user", "assistant"}
-    ])
+    chat = None
+    if question.strip():
+        chat = model.start_chat(history=[
+            {"role": m["role"], "parts": [m["content"]]}
+            for m in history_messages[-3:]
+            if m.get("role") in {"user", "assistant"}
+        ])
 
     # Send message with optional image
     if image_upload is not None:
