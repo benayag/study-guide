@@ -202,7 +202,7 @@ if image_upload is not None:
 else:
     response = chat.send_message(f"{system_prompt}\n\n{user_text}")
 
-return response.text.strip()
+    return response.text.strip()
 
 
 @dataclass
