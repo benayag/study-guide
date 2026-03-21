@@ -142,7 +142,7 @@ def _select_relevant_excerpts(article_text: str, question: str, max_chars: int =
 
 
 def _build_tutor_system_prompt(mode: str) -> str:
-user_text = (
+    user_text = (
     f"Student question/work:\n{question.strip()}\n\n"
     f"Student attempt (typed):\n{student_attempt_text.strip() or '[none]'}\n\n"
     "Trusted materials (use these as supporting context when helpful):\n"
